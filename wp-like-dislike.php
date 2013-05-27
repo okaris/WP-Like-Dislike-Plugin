@@ -121,9 +121,9 @@ function wpld_user_liked_posts()
 
   $user_id = $current_user->ID;
   $table_name = $wpdb->prefix . "wpld";
-  $post_array = [];
+  $post_array = array();
 
-  $liked_posts = $wpdb->get_results( "SELECT post_id FROM $table_name WHERE member_id = $user_id" );
+  $liked_posts = $wpdb->get_results( "SELECT post_id FROM $table_name WHERE member_id = $user_id AND liked = 1" );
   foreach ($liked_posts as $liked_post){
     $post_array[] = $liked_post->post_id;
   }
