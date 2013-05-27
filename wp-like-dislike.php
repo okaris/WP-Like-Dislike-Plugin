@@ -14,7 +14,7 @@ global $wpld_db_version;
 $wpld_db_version = "1.0";
 
 register_activation_hook( __FILE__, 'wpld_install' );
-register_deactivation_hook(__FILE__, 'wpld_uninstall');
+register_deactivation_hook(__FILE__, 'wpld_deactivate');
 register_uninstall_hook(__FILE__, 'wpld_uninstall');
 
 function wpld_install() {
@@ -29,6 +29,7 @@ function wpld_install() {
   disliked tinyint(4),
   post_id int(10),
   comment_id int(10),
+  member_id int(10),
   time datetime DEFAULT '0000-00-00 00:00:00' NOT NULL,
   ip_address VARCHAR(255),
   hashkey VARCHAR (32),
@@ -42,6 +43,10 @@ function wpld_install() {
    add_option( "wpld_db_version", $wpld_db_version );
 }
 
+function wpld_deactivate() {
+
+}
+
 function wpld_uninstall() {
     global $wpdb;
     $table_name = $wpdb->prefix . 'wpld';
@@ -51,14 +56,32 @@ function wpld_uninstall() {
 
 function wpld_like_or_dislike($post_id, $action = 'like')
 {
-  $rows_affected = $wpdb->insert( $table_name, array( 'time' => current_time('mysql'), 'name' => $welcome_name, 'text' => $welcome_text ) );
+  global $current_user;
+  $user_id = $current_user->ID;
+  $liked = 0;
+  $disliked = 0;
+  $comment_id = '';
+  $time = date('Y-m-d H:i:s');
+  $ip_address = $_SERVER['REMOTE_ADDR'];
+  $hashkey = md5($this->member_id.$entry_id);
+
+  if ($action == 'like') {
+    $liked = 1;
+  }
+  else if ($action == 'dislike')
+  {
+    $disliked = 1;
+  }
+
   $table_name = $wpdb->prefix . "wpld";
 
   $wpdb->query( $wpdb->prepare( "
     INSERT INTO $table_name
-    ( id, liked, disliked, post_id, comment_id, time, ip_address, hashkey)
-    VALUES ( %s, %d, %d, %s, %d, %d, %s, %s, %s) ON DUPLICATE KEY UPDATE liked = %s, disliked = $s", 
-        '', $liked, $disliked, $post_id, $comment_id, $time, $ip_address, $hashkey, $liked, $disliked ));
+    ( id, liked, disliked, post_id, comment_id, member_id, time, ip_address, hashkey)
+    VALUES 
+    ( %s, %d, %d, %s, %d, %d, %d, %s, %s, %s) 
+    ON DUPLICATE KEY UPDATE liked = %d, disliked = %d", 
+        '', $liked, $disliked, $post_id, $comment_id, $user_id, $time, $ip_address, $hashkey, $liked, $disliked ));
 
   $previous_like_value = get_post_meta( $post_id, $key = 'likes', $single = true );
   if ($action == 'like') {
