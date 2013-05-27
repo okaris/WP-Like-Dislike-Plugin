@@ -9,6 +9,8 @@ Author URI: http://okaris.com
 License: GPL2
 */
 
+add_action('wp_ajax_wpld_ajax', 'wpld_ajax');
+add_action('wp_ajax_nopriv_wpld_ajax', 'wpld_ajax');
 
 global $wpld_db_version;
 $wpld_db_version = "1.0";
@@ -54,10 +56,17 @@ function wpld_uninstall() {
   $wpdb->query("DROP TABLE IF EXISTS $table_name ");
 }
 
-add_action('wp_ajax_wpld', 'wpld_like_or_dislike');
-
-function wpld_like_or_dislike($post_id, $action = 'like')
+function wpld_ajax()
 {
+  $post_id = $_POST['post_id'];
+  $wpld_action = $_POST['wpld_action'];
+  echo wpld_like_or_dislike($post_id,$wpld_action);
+  die();
+}
+
+function wpld_like_or_dislike($post_id, $wpld_action = 'like')
+{
+  global $wpdb;
   global $current_user;
   $user_id = $current_user->ID;
   $liked = 0;
@@ -65,12 +74,12 @@ function wpld_like_or_dislike($post_id, $action = 'like')
   $comment_id = '';
   $time = date('Y-m-d H:i:s');
   $ip_address = $_SERVER['REMOTE_ADDR'];
-  $hashkey = md5($this->member_id.$entry_id);
+  $hashkey = md5($user_id.$entry_id);
 
-  if ($action == 'like') {
+  if ($wpld_action == 'like') {
     $liked = 1;
   }
-  else if ($action == 'dislike')
+  else if ($wpld_action == 'dislike')
   {
     $disliked = 1;
   }
@@ -81,25 +90,27 @@ function wpld_like_or_dislike($post_id, $action = 'like')
     INSERT INTO $table_name
     ( id, liked, disliked, post_id, comment_id, member_id, time, ip_address, hashkey)
     VALUES 
-    ( %s, %d, %d, %s, %d, %d, %d, %s, %s, %s) 
+    ( %s, %d, %d, %d, %d, %d, %s, %s, %s) 
     ON DUPLICATE KEY UPDATE liked = %d, disliked = %d", 
-    '', $liked, $disliked, $post_id, $comment_id, $user_id, $time, $ip_address, $hashkey, $liked, $disliked ));
+    '', $liked, $disliked, $post_id, $comment_id, $user_id, $time, $ip_address, $hashkey, $liked, $disliked )) or die(mysql_error());
   if ($affected_rows != 0 || $affected_rows!==FALSE) {
     $previous_like_value = get_post_meta( $post_id, $key = 'likes', $single = true );
-    if ($action == 'like') {
+    if ($wpld_action == 'like') {
       update_post_meta( $post_id, 'likes', $previous_like_value + 1 );
-      echo "Success";
-      die();
+      return "Success";
+      
     }
-    else if ($action == 'dislike')
+    else if ($wpld_action == 'dislike')
     {
       update_post_meta( $post_id, 'likes', $previous_like_value - 1 );
-      echo "Success";
-      die();
+      return "Success";
+      
     }
-
+    return "Mysql query succeeded but there was a problem updating post meta";
+      
+  }else{
+    return "Mysql query failed";
   }
-  
 }
 
 add_action( 'wp_enqueue_scripts', 'wpld_scripts' );
@@ -114,4 +125,3 @@ function wpld_scripts() {
 
 
 ?>
-
