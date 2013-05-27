@@ -108,10 +108,27 @@ function wpld_like_or_dislike($post_id, $wpld_action = 'like')
       
     }
     return "Mysql query succeeded but there was a problem updating post meta";
-      
+    
   }else{
     return "No Change";
   }
+}
+
+function wpld_user_liked_posts()
+{
+  global $wpdb;
+  global $current_user;
+
+  $user_id = $current_user->ID;
+  $table_name = $wpdb->prefix . "wpld";
+  $post_array = [];
+
+  $liked_posts = $wpdb->get_results( "SELECT post_id FROM $table_name WHERE member_id = $user_id" );
+  foreach ($liked_posts as $liked_post){
+    $post_array[] = $liked_post->post_id;
+  }
+
+  return $post_array;
 }
 
 add_action( 'wp_enqueue_scripts', 'wpld_scripts' );
@@ -121,7 +138,7 @@ function wpld_scripts() {
 
   // in javascript, object properties are accessed as ajax_object.ajax_url, ajax_object.we_value
   wp_localize_script( 'ajax-script', 'ajax_object',
-            array( 'ajax_url' => admin_url( 'admin-ajax.php' ), 'we_value' => $email_nonce ) );
+    array( 'ajax_url' => admin_url( 'admin-ajax.php' ), 'we_value' => $email_nonce ) );
 }
 
 
