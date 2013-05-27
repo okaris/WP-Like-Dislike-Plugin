@@ -18,12 +18,12 @@ register_deactivation_hook(__FILE__, 'wpld_deactivate');
 register_uninstall_hook(__FILE__, 'wpld_uninstall');
 
 function wpld_install() {
-   global $wpdb;
-   global $wpld_db_version;
+ global $wpdb;
+ global $wpld_db_version;
 
-   $table_name = $wpdb->prefix . "wpld";
-      
-   $sql = "CREATE TABLE IF NOT EXISTS $table_name (
+ $table_name = $wpdb->prefix . "wpld";
+
+ $sql = "CREATE TABLE IF NOT EXISTS $table_name (
   id mediumint(9) NOT NULL AUTO_INCREMENT,
   liked tinyint(4),
   disliked tinyint(4),
@@ -35,12 +35,12 @@ function wpld_install() {
   hashkey VARCHAR (32),
   UNIQUE KEY id (id),
   UNIQUE hashkey (hashkey)
-    );";
+  );";
 
-   require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
-   dbDelta( $sql );
- 
-   add_option( "wpld_db_version", $wpld_db_version );
+require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
+dbDelta( $sql );
+
+add_option( "wpld_db_version", $wpld_db_version );
 }
 
 function wpld_deactivate() {
@@ -48,11 +48,13 @@ function wpld_deactivate() {
 }
 
 function wpld_uninstall() {
-    global $wpdb;
-    $table_name = $wpdb->prefix . 'wpld';
+  global $wpdb;
+  $table_name = $wpdb->prefix . 'wpld';
 
-    $wpdb->query("DROP TABLE IF EXISTS $table_name ");
+  $wpdb->query("DROP TABLE IF EXISTS $table_name ");
 }
+
+add_action('wp_ajax_wpld', 'wpld_like_or_dislike');
 
 function wpld_like_or_dislike($post_id, $action = 'like')
 {
@@ -75,23 +77,41 @@ function wpld_like_or_dislike($post_id, $action = 'like')
 
   $table_name = $wpdb->prefix . "wpld";
 
-  $wpdb->query( $wpdb->prepare( "
+  $affected_rows = $wpdb->query( $wpdb->prepare( "
     INSERT INTO $table_name
     ( id, liked, disliked, post_id, comment_id, member_id, time, ip_address, hashkey)
     VALUES 
     ( %s, %d, %d, %s, %d, %d, %d, %s, %s, %s) 
     ON DUPLICATE KEY UPDATE liked = %d, disliked = %d", 
-        '', $liked, $disliked, $post_id, $comment_id, $user_id, $time, $ip_address, $hashkey, $liked, $disliked ));
+    '', $liked, $disliked, $post_id, $comment_id, $user_id, $time, $ip_address, $hashkey, $liked, $disliked ));
+  if ($affected_rows != 0 || $affected_rows!==FALSE) {
+    $previous_like_value = get_post_meta( $post_id, $key = 'likes', $single = true );
+    if ($action == 'like') {
+      update_post_meta( $post_id, 'likes', $previous_like_value + 1 );
+      echo "Success";
+      die();
+    }
+    else if ($action == 'dislike')
+    {
+      update_post_meta( $post_id, 'likes', $previous_like_value - 1 );
+      echo "Success";
+      die();
+    }
 
-  $previous_like_value = get_post_meta( $post_id, $key = 'likes', $single = true );
-  if ($action == 'like') {
-  update_post_meta( $post_id, 'likes', $previous_like_value + 1 );
   }
-  else if ($action == 'dislike')
-  {
-  update_post_meta( $post_id, 'likes', $previous_like_value - 1 );
-  }
+  
 }
+
+add_action( 'wp_enqueue_scripts', 'wpld_scripts' );
+
+function wpld_scripts() {
+  wp_enqueue_script( 'ajax-script', plugins_url( '/js/wpld-functions.js', __FILE__ ), array('jquery'));
+
+  // in javascript, object properties are accessed as ajax_object.ajax_url, ajax_object.we_value
+  wp_localize_script( 'ajax-script', 'ajax_object',
+            array( 'ajax_url' => admin_url( 'admin-ajax.php' ), 'we_value' => $email_nonce ) );
+}
+
 
 ?>
 
