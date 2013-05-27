@@ -10,7 +10,7 @@ License: GPL2
 */
 
 add_action('wp_ajax_wpld_ajax', 'wpld_ajax');
-add_action('wp_ajax_nopriv_wpld_ajax', 'wpld_ajax');
+//add_action('wp_ajax_nopriv_wpld_ajax', 'wpld_ajax'); Logged-out users can variant_date_to_timestamp(variant)
 
 global $wpld_db_version;
 $wpld_db_version = "1.0";
@@ -74,7 +74,7 @@ function wpld_like_or_dislike($post_id, $wpld_action = 'like')
   $comment_id = '';
   $time = date('Y-m-d H:i:s');
   $ip_address = $_SERVER['REMOTE_ADDR'];
-  $hashkey = md5($user_id.$entry_id);
+  $hashkey = md5($user_id.$post_id);
 
   if ($wpld_action == 'like') {
     $liked = 1;
@@ -87,29 +87,30 @@ function wpld_like_or_dislike($post_id, $wpld_action = 'like')
   $table_name = $wpdb->prefix . "wpld";
 
   $affected_rows = $wpdb->query( $wpdb->prepare( "
-    INSERT INTO $table_name
+    INSERT IGNORE INTO $table_name
     ( id, liked, disliked, post_id, comment_id, member_id, time, ip_address, hashkey)
     VALUES 
     ( %s, %d, %d, %d, %d, %d, %s, %s, %s) 
     ON DUPLICATE KEY UPDATE liked = %d, disliked = %d", 
-    '', $liked, $disliked, $post_id, $comment_id, $user_id, $time, $ip_address, $hashkey, $liked, $disliked )) or die(mysql_error());
-  if ($affected_rows != 0 || $affected_rows!==FALSE) {
+    '', $liked, $disliked, $post_id, $comment_id, $user_id, $time, $ip_address, $hashkey, $liked, $disliked));
+
+  if ($affected_rows != 0 && $affected_rows!==FALSE) {
     $previous_like_value = get_post_meta( $post_id, $key = 'likes', $single = true );
     if ($wpld_action == 'like') {
       update_post_meta( $post_id, 'likes', $previous_like_value + 1 );
-      return "Success";
+      return "Liked";
       
     }
     else if ($wpld_action == 'dislike')
     {
       update_post_meta( $post_id, 'likes', $previous_like_value - 1 );
-      return "Success";
+      return "Disliked";
       
     }
     return "Mysql query succeeded but there was a problem updating post meta";
       
   }else{
-    return "Mysql query failed";
+    return "No Change";
   }
 }
 
