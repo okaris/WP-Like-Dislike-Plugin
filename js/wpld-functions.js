@@ -9,11 +9,15 @@ function wpld(post_id, wpld_action) {
 		alert('Got this from the server: ' + response);
 	});
 }
-jQuery('.wpld-like-button').click(function(){
-	var post_id = this.data("postId");
-	wpld(post_id,"like");
-});
-jQuery('.wpld-dislike-button').click(function(){
-	var post_id = this.data("postId");
-	wpld(post_id,"dislike");
+jQuery(document).ready(function($) {
+
+	$('.wpld-like-button').click(function(){
+		var post_id = $(this).data("postId");
+		wpld(post_id,"like");
+	});
+	$('.wpld-dislike-button').click(function(){
+		var post_id = $(this).data("postId");
+		wpld(post_id,"dislike");
+	});
+
 });
