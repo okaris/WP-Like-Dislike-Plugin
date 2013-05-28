@@ -112,8 +112,7 @@ function wpld_like_or_dislike($post_id, $wpld_action = 'like')
   }else{
     return "No Change";
   }
-}
-
+rl
 function wpld_user_liked_posts()
 {
   global $wpdb;
@@ -138,7 +137,7 @@ function wpld_scripts() {
 
   // in javascript, object properties are accessed as ajax_object.ajax_url, ajax_object.we_value
   wp_localize_script( 'ajax-script', 'ajax_object',
-    array( 'ajax_url' => admin_url( 'admin-ajax.php' ), 'we_value' => $email_nonce ) );
+    array( 'ajax_url' => admin_url( 'admin-ajax.php' ), 'blog_uel' => get_bloginfo('wpurl') ) );
 }
 
 
