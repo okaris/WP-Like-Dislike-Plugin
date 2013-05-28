@@ -16,39 +16,40 @@ $ip_address = $_SERVER['REMOTE_ADDR'];
 $hashkey = md5($user_id.$post_id);
 
 if ($wpld_action == 'like') {
-$liked = 1;
+	$liked = 1;
 }
 else if ($wpld_action == 'dislike')
 {
-$disliked = 1;
+	$disliked = 1;
 }
 
 $table_name = $wpdb->prefix . "wpld";
 
 $affected_rows = $wpdb->query( $wpdb->prepare( "
-INSERT IGNORE INTO $table_name
-( id, liked, disliked, post_id, comment_id, member_id, time, ip_address, hashkey)
-VALUES 
-( %s, %d, %d, %d, %d, %d, %s, %s, %s) 
-ON DUPLICATE KEY UPDATE liked = %d, disliked = %d", 
-'', $liked, $disliked, $post_id, $comment_id, $user_id, $time, $ip_address, $hashkey, $liked, $disliked));
+	INSERT IGNORE INTO $table_name
+	( id, liked, disliked, post_id, comment_id, member_id, time, ip_address, hashkey)
+	VALUES 
+	( %s, %d, %d, %d, %d, %d, %s, %s, %s) 
+	ON DUPLICATE KEY UPDATE liked = %d, disliked = %d", 
+	'', $liked, $disliked, $post_id, $comment_id, $user_id, $time, $ip_address, $hashkey, $liked, $disliked));
 
 if ($affected_rows != 0 && $affected_rows!==FALSE) {
-$previous_like_value = get_post_meta( $post_id, $key = 'likes', $single = true );
-if ($wpld_action == 'like') {
-  update_post_meta( $post_id, 'likes', $previous_like_value + 1 );
-  echo "Liked";
-  
-}
-else if ($wpld_action == 'dislike')
-{
-  update_post_meta( $post_id, 'likes', $previous_like_value - 1 );
-  echo "Disliked";
-  
-}
-echo "Mysql query succeeded but there was a problem updating post meta";
+	$previous_like_value = get_post_meta( $post_id, $key = 'likes', $single = true );
+	if ($wpld_action == 'like') {
+		update_post_meta( $post_id, 'likes', $previous_like_value + 1 );
+		echo "Liked";
+		die();
+	}
+	else if ($wpld_action == 'dislike')
+	{
+		update_post_meta( $post_id, 'likes', $previous_like_value - 1 );
+		echo "Disliked";
+		die();
+	}
+	echo "Mysql query succeeded but there was a problem updating post meta";
+	die();
 
 }else{
-echo "No Change";
+	echo "No Change";
+	die();
 }
-?>

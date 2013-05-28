@@ -18,14 +18,14 @@ jQuery(document).ready(function($) {
 			wpld_action: wpld_action      // We pass php values differently!
 		};
 		// We can also pass the url value separately from ajaxurl for front end AJAX implementations
-		$.post(ajax_object.blog_url + "/wp-content/plugins/wti-like-post/wti_like.php", data, function(response) {
+		$.post(ajax_object.blog_url + "/wp-content/plugins/wp-like-dislike/wpld-like.php", data, function(response) {
 			alert('Got this from the server: ' + response);
 		});
 	}
 
 	$('.wpld-like-button').click(function(){
 		var post_id = $(this).data("postId");
-		wpld_fast(post_id,"like");
+		wpld(post_id,"like");
 	});
 	$('.wpld-dislike-button').click(function(){
 		var post_id = $(this).data("postId");
