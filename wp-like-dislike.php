@@ -118,8 +118,10 @@ function wpld_user_liked_posts()
 {
   global $wpdb;
   global $current_user;
+  global $wp_query;
 
-  $user_id = $current_user->ID;
+  $curauth = $wp_query->get_queried_object();
+  $user_id = $curauth->ID;
   $table_name = $wpdb->prefix . "wpld";
   $post_array = array();
 

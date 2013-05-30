@@ -22,12 +22,11 @@ jQuery(document).ready(function($) {
 			alert('Got this from the server: ' + response);
 		});
 	}
-
-	$('.wpld-like-button').click(function(){
+	$(document).on("click",".wpld-like-button",function(){
 		var post_id = $(this).data("postId");
 		wpld(post_id,"like");
 	});
-	$('.wpld-dislike-button').click(function(){
+	$(document).on("click",".wpld-dislike-button",function(){
 		var post_id = $(this).data("postId");
 		wpld(post_id,"dislike");
 	});
